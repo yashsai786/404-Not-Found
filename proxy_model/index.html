@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Aura Proxy OS - v2.0 Protection Mode</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%2300f5ff%22>P</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #030508; --side: #090c10; --card: rgba(22, 27, 34, 0.7); --accent: #00f5ff; --text: #e6edf3; --border: rgba(48, 54, 61, 0.6); }
+        body { background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        .dashboard { width: 1200px; height: 800px; background: var(--card); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; display: none; flex-direction: column; overflow: hidden; box-shadow: 0 50px 100px #000; transition: 0.5s; }
+        .header { padding: 24px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .btn { background: transparent; border: 1px solid var(--border); color: #888; padding: 10px 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; }
+        .btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,245,255,0.05); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 30px; overflow-y: auto; flex: 1; }
+        .p-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 20px; padding: 25px; transition: 0.3s; }
+        .p-card h3 { margin: 0; }
+        .p-card .price { color: var(--accent); font-weight: 800; font-size: 20px; margin: 10px 0; }
+        .p-card .stock { font-size: 11px; color: #666; margin-bottom: 15px; }
+        .admin-controls { display: none; margin-top: 15px; gap: 8px; border-top: 1px solid #222; padding-top: 15px; }
+        .log { width: 350px; background: #000; padding: 25px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); border-left: 1px solid var(--border); overflow-y: auto; }
+        .btn-del { border-color: #ff3e00; color: #ff3e00; }
+        .btn-del:hover { background: rgba(255,62,0,0.1); }
+    </style>
+</head>
+<body>
+    <!-- SELECTION -->
+    <div id="selection" style="text-align: center;">
+        <h1 style="color:var(--accent);font-size:64px;font-weight:900;letter-spacing:-2px;">PROXY PROTECTED OS</h1>
+        <div style="display:flex;gap:30px;justify-content:center;margin-top:50px;">
+            <div onclick="init('pharmacy')" style="cursor:pointer;padding:60px;background:var(--side);border:1px solid #222;border-radius:24px;">⚕️ PHARMACY_NODE</div>
+            <div onclick="init('food')" style="cursor:pointer;padding:60px;background:var(--side);border:1px solid #222;border-radius:24px;">🍔 FOODCOURT_NODE</div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="dashboard">
+        <div class="header">
+            <div style="font-weight:900;letter-spacing:2px;">AURA_PROXY <span id="admin-id" style="color:var(--accent);display:none;font-size:12px;">• ADMIN AUTHORIZED</span></div>
+            <div style="display:flex;gap:10px;">
+                <button class="btn" id="btn-admin" onclick="openAdmin()" style="border-color:var(--accent);color:var(--accent);">🛡️ PROXY AUTH</button>
+                <button class="btn" onclick="location.reload()">POWER_DOWN</button>
+            </div>
+        </div>
+        <div id="admin-p" style="display:none;padding:20px;background:#000;text-align:center;border-bottom:1px solid var(--accent);">
+            <input id="an" style="background:#111;color:white;border:1px solid #333;padding:8px;" placeholder="Node Name">
+            <input id="ap" style="background:#111;color:white;border:1px solid #333;padding:8px;" placeholder="Value">
+            <input id="as" style="background:#111;color:white;border:1px solid #333;padding:8px;" placeholder="Nodes Stock">
+            <button class="btn" style="color:var(--accent);border-color:var(--accent);" onclick="addItem()">+ INJECT DATA</button>
+        </div>
+        <div style="display:flex;flex:1;min-height:0;">
+            <div class="grid" id="grid"></div>
+            <div class="log" id="log">» Proxy Initialized. Connecting to real system...</div>
+        </div>
+    </div>
+
+    <script>
+        let isAdmin = false;
+
+        async function init(type) {
+            const r = await fetch('/initialize', {method: 'POST', body: JSON.stringify({type})});
+            const d = await r.json();
+            if (d.status === "ok") {
+                document.getElementById('selection').style.display='none';
+                document.getElementById('dashboard').style.display='flex';
+                log(d.msg); loadInv();
+            }
+        }
+
+        async function loadInv() {
+            const r = await fetch('/inventory');
+            const d = await r.json();
+            const g = document.getElementById('grid'); g.innerHTML = "";
+            d.data.forEach(i => {
+                const card = document.createElement('div');
+                card.className = "p-card";
+                card.innerHTML = `
+                    <h3>${i.name}</h3>
+                    <div class="price">$${i.price.toFixed(2)}</div>
+                    <div class="stock">CORE COUNT: ${i.stock}</div>
+                    <button class="btn" style="width:100%;" ${i.stock <= 0 ? 'disabled' : ''} onclick="buy('${i.key}')">INITIATE_DISPENSE</button>
+                    <div class="admin-controls" id="controls-${i.id}" style="${isAdmin ? 'display:flex' : 'display:none'}">
+                        <button class="btn" onclick="updateStock(${i.id})">✏️ MOD</button>
+                        <button class="btn btn-del" onclick="delItem(${i.id})">🗑 DEL</button>
+                    </div>
+                `;
+                g.appendChild(card);
+            });
+        }
+
+        async function buy(k) {
+            log(`PROXY: Forwarding dispense request for ${k}...`);
+            const r = await fetch('/purchase', {method: 'POST', body: JSON.stringify({key: k})});
+            const d = await r.json(); log(d.msg); loadInv();
+        }
+
+        async function openAdmin() {
+            const pass = prompt("PROXY CHALLENGE: ");
+            const r = await fetch('/admin_auth', {method: 'POST', body: JSON.stringify({password: pass})});
+            const d = await r.json();
+            if (d.status === "ok") {
+                isAdmin = true;
+                document.getElementById('admin-p').style.display='block';
+                document.getElementById('admin-id').style.display='inline';
+                document.getElementById('btn-admin').style.display='none';
+                log(d.msg); loadInv();
+            } else {
+                alert(d.msg); log(d.msg);
+            }
+        }
+
+        async function addItem() {
+            const n=document.getElementById('an').value, p=document.getElementById('ap').value, s=document.getElementById('as').value;
+            const r = await fetch('/add', {method: 'POST', body: JSON.stringify({n, p, s})});
+            const d = await r.json(); log(d.msg); loadInv();
+        }
+
+        async function updateStock(id) {
+            const s = prompt("NEW DATA COUNT:");
+            if (s !== null) {
+                const r = await fetch('/update_stock', {method: 'POST', body: JSON.stringify({id, s})});
+                const d = await r.json(); log(d.msg); loadInv();
+            }
+        }
+
+        async function delItem(id) {
+            if (confirm("ERASE CORE DATA?")) {
+                const r = await fetch('/delete', {method: 'POST', body: JSON.stringify({id})});
+                const d = await r.json(); log(d.msg); loadInv();
+            }
+        }
+
+        function log(m) {
+            const l = document.getElementById('log');
+            l.innerHTML += `<div style="margin-bottom:8px;">[${new Date().toLocaleTimeString()}] ${m}</div>`;
+            l.scrollTop = l.scrollHeight;
+        }
+    </script>
+</body>
+</html>
