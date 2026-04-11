@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Aura Strategy OS - v3.5 SECURE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #05070a; --panel: rgba(22, 27, 34, 0.8); --accent: #00f5ff; --text: #e6edf3; --border: rgba(48, 54, 61, 0.6); }
+        body { background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        .layout { width: 1200px; height: 800px; background: var(--panel); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 32px; display: flex; overflow: hidden; box-shadow: 0 50px 100px #000; }
+        .inventory-shelf { flex: 1; padding: 40px; overflow-y: auto; border-right: 1px solid var(--border); }
+        .items-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .item-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 20px; padding: 25px; transition: 0.4s; position: relative; }
+        .adm-card-btns { display: none; margin-top: 15px; border-top: 1px solid #222; padding-top: 15px; gap: 5px; }
+        .control-panel { width: 400px; background: #000; display: flex; flex-direction: column; padding: 40px; }
+        .strat-mode { margin-bottom: 30px; }
+        .strat-opt { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 11px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .strat-opt.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 900; }
+        .console { flex: 1; background: #080a0c; border: 1px solid #111; border-radius: 16px; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #00f5ff; overflow-y: auto; }
+        .admin-view { display: none; background: rgba(0,245,255,0.05); padding: 20px; border-radius: 16px; border: 1px dashed var(--accent); margin-bottom: 20px; }
+        .btn-sm { padding: 5px 10px; font-size: 10px; border-radius: 5px; cursor: pointer; background: transparent; border: 1px solid #444; color: #888; }
+        .btn-pulse { background: var(--accent); color: #000; border: none; padding: 10px; border-radius: 10px; font-weight: 900; width: 100%; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <div class="inventory-shelf">
+            <h1 style="letter-spacing:-1px; margin-bottom:30px;">STRATEGY_OS 
+                <span id="adm-tag" style="display:none; color:var(--accent); font-size:12px;">★ ADMIN AUTHORIZED</span>
+                <button id="btn-exit-admin" onclick="exitAdmin()" class="btn-sm" style="display:none; margin-left:10px; border-color:#ff3e00; color:#ff3e00;">🔒 EXIT ADMIN</button>
+            </h1>
+            
+            <div id="admin-tools" class="admin-view">
+                <div style="font-size:10px; color:var(--accent); margin-bottom:10px;">INVENTORY_INJECTION_UNIT</div>
+                <input id="an" placeholder="Name" style="width:70px;"> <input id="ap" placeholder="Price" style="width:50px;"> <input id="as" placeholder="Stock" style="width:50px;">
+                <button class="btn-sm" onclick="addItem()" style="border-color:var(--accent); color:var(--accent);">+ INJECT</button>
+            </div>
+
+            <div class="items-grid" id="grid"></div>
+        </div>
+
+        <div class="control-panel">
+            <div id="strat-disp" style="display:none;" class="strat-mode">
+                <span class="section-tag" style="color:var(--accent); font-size:11px;">HARDWARE_DISPENSE_ALGORITHM</span>
+                <div class="select-group" style="display:flex; gap:10px; margin-top:10px;">
+                    <div id="disp-spiral" class="strat-opt active" onclick="setStrat('dispense', 'spiral')">SPIRAL</div>
+                    <div id="disp-robotic" class="strat-opt" onclick="setStrat('dispense', 'robotic')">ROBOTIC</div>
+                </div>
+            </div>
+
+            <div class="strat-mode">
+                <span style="font-size:11px; opacity:0.6;">USER_PAYMENT_GATEWAY</span>
+                <div class="select-group" style="display:flex; gap:10px; margin-top:10px;">
+                    <div id="pay-upi" class="strat-opt active" onclick="setStrat('payment', 'upi')">UPI</div>
+                    <div id="pay-card" class="strat-opt" onclick="setStrat('payment', 'card')">CARD</div>
+                </div>
+            </div>
+
+            <button id="btn-adm-login" onclick="openAdmin()" class="btn-sm" style="margin-bottom:20px; border-color:var(--accent); color:var(--accent);">🛠 SYSTEM CMD</button>
+            <div id="log" class="console">» Terminal initialized. Select a payment method.</div>
+        </div>
+    </div>
+
+    <script>
+        let isAdmin = false;
+        async function fetchInv() {
+            const r = await fetch('/inventory'); const d = await r.json();
+            const g = document.getElementById('grid'); g.innerHTML = "";
+            d.data.forEach(item => {
+                g.innerHTML += `<div class="item-card">
+                        <h3>${item.name}</h3>
+                        <div style="color:var(--accent); font-weight:900;">$${item.price.toFixed(2)}</div>
+                        <div style="font-size:11px; opacity:0.5; margin-bottom:15px;">Nodes: ${item.stock}</div>
+                        <button class="btn-pulse" onclick="buy(${item.id}, '${item.name}', ${item.price})">SECURE DISPENSE</button>
+                        <div class="adm-card-btns" style="${isAdmin ? 'display:flex' : 'display:none'}">
+                            <button class="btn-sm" onclick="updateStock(${item.id})">✏️ UPD</button>
+                            <button class="btn-sm" style="border-color:#ff3e00; color:#ff3e00;" onclick="delItem(${item.id})">🗑 DEL</button>
+                        </div>
+                    </div>`;
+            });
+        }
+        async function setStrat(type, value) {
+            const r = await fetch('/set_strategy', { method: 'POST', body: JSON.stringify({type, value})});
+            const d = await r.json();
+            const prefix = type === 'dispense' ? 'disp-' : 'pay-';
+            document.querySelectorAll(`[id^="${prefix}"]`).forEach(el => el.classList.remove('active'));
+            document.getElementById(prefix + value).classList.add('active');
+            log(`STRAT_SWAP: ${d.msg}`);
+        }
+        async function openAdmin() {
+            const pass = prompt("IDENTITY_CHALLENGE:");
+            const r = await fetch('/admin_auth', { method: 'POST', body: JSON.stringify({password: pass})});
+            const d = await r.json();
+            if (d.status === "ok") {
+                isAdmin = true;
+                document.getElementById('admin-tools').style.display = 'block';
+                document.getElementById('strat-disp').style.display = 'block';
+                document.getElementById('adm-tag').style.display = 'inline';
+                document.getElementById('btn-exit-admin').style.display = 'inline';
+                document.getElementById('btn-adm-login').style.display = 'none';
+                log("AUTH: Admin elevation granted."); fetchInv();
+            } else { alert("ACCESS_DENIED."); }
+        }
+        function exitAdmin() {
+            isAdmin = false;
+            document.getElementById('admin-tools').style.display = 'none';
+            document.getElementById('strat-disp').style.display = 'none';
+            document.getElementById('adm-tag').style.display = 'none';
+            document.getElementById('btn-exit-admin').style.display = 'none';
+            document.getElementById('btn-adm-login').style.display = 'block';
+            log("AUTH: Returned to PUBLIC mode."); fetchInv();
+        }
+        async function buy(id, name, price) {
+            log(`TX_INIT: Processing Node ${id}...`);
+            const r = await fetch('/purchase', { method: 'POST', body: JSON.stringify({id, name, price})});
+            const d = await r.json();
+            if (d.status === "ok") {
+                log(`PAY: ${d.details.payment}`); log(`DISPENSE: ${d.details.dispense}`); log(`SUCCESS: ${d.msg}`);
+            } else { log(`CRITICAL: ${d.msg}`); }
+            fetchInv();
+        }
+        async function addItem() {
+            const n=document.getElementById('an').value, p=document.getElementById('ap').value, s=document.getElementById('as').value;
+            const r = await fetch('/admin_add', {method: 'POST', body: JSON.stringify({n, p, s})});
+            const d = await r.json(); log(d.msg); fetchInv();
+        }
+        async function updateStock(id) {
+            const s = prompt("NEW DATA COUNT:");
+            if (s !== null) {
+                const r = await fetch('/admin_update', {method: 'POST', body: JSON.stringify({id, s})});
+                const d = await r.json(); fetchInv();
+            }
+        }
+        async function delItem(id) {
+            if (confirm("ERASE CORE DATA?")) {
+                const r = await fetch('/admin_delete', {method: 'POST', body: JSON.stringify({id})});
+                const d = await r.json(); fetchInv();
+            }
+        }
+        function log(m) { const l = document.getElementById('log'); l.innerHTML += `<div>• ${m}</div>`; l.scrollTop = l.scrollHeight; }
+        fetchInv();
+    </script>
+</body>
+</html>
