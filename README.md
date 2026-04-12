@@ -129,6 +129,12 @@ All critical operations are hidden, ensuring a **safe and smooth user experience
 ## 📁 Folder Structure
 
 ```bash
+allthree/
+  ├── templates/
+  ├── __init__.py
+  ├── kiosk_logic.py
+  └── kiosk_master.db
+
 Basic Cli/
   ├── cli_factory.py
   ├── cli_proxy.py
@@ -152,29 +158,50 @@ strategy_model/
   ├── index.html
   └── strategy_os.db
 
-.gitignore  
+.gitignore
+kiosk_master.db
+main.py
 README.md
 ```
+
 ---
 
 ## 🏗️ System Architecture & Execution Modes  
 
 This project is designed with multiple execution layers to demonstrate flexibility in interaction and system design:
 
-- 🖥️ **CLI Modules (Basic Cli/)**  
+- 🌐 **Integrated Full Project (`allthree/` + `main.py`)** *(Primary)*  
+  - All three design patterns unified into a single cohesive system  
+  - Entry point: `main.py` at the project root  
+  - Shared logic in `allthree/kiosk_logic.py` and persistent storage via `kiosk_master.db`  
+  - Web templates served from `allthree/templates/`  
+  - This is the **recommended way to run the full system**
+
+- 🖥️ **CLI Modules (`Basic Cli/`)**  
   - Terminal-based implementations  
   - Focused purely on logic and design pattern demonstration  
   - No frontend or database dependency  
 
-- 🌐 **Backend + Frontend Modules (factory_model, proxy_model, strategy_model)**  
-  - Include a basic web interface (`index.html`)  
-  - Backend logic handled via Python (`app.py`)  
-  - Persistent storage using local database files (`.db`)  
-  - Provide a more realistic system simulation  
+- 🌐 **Standalone Backend + Frontend Modules (`factory_model`, `proxy_model`, `strategy_model`)**  
+  - Individual pattern implementations with separate web interfaces  
+  - Each includes `index.html`, `app.py`, and its own `.db` file  
+  - Useful for isolated pattern testing and demonstration  
 
 ---
 
 ## ⚙️ How to Run
+
+### 🚀 Integrated System (All Three Patterns — Recommended)
+
+Run the full integrated project from the root directory:
+
+```bash
+python main.py
+```
+
+This launches the complete Smart Kiosk System with all three design patterns (Factory, Proxy, Strategy) working together.
+
+---
 
 ### 🖥️ CLI Versions
 
@@ -188,7 +215,7 @@ python cli_strategy.py
 
 ---
 
-### 🌐 Backend Versions
+### 🌐 Standalone Backend Versions
 
 Each module runs independently:
 
@@ -211,7 +238,9 @@ python app.py
 
 ## 🎯 Key Features
 
-* ✅ Independent implementation of each design pattern
+* ✅ All three design patterns integrated into a unified system (`allthree/`)
+* ✅ Single entry point via `main.py` for the full project
+* ✅ Independent implementations also available for each pattern
 * ✅ Modular and scalable architecture
 * ✅ CLI + Web-based interaction
 * ✅ Role-based access control

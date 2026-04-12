@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Unified Kiosk OS | Patterns Integration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --accent: #0ea5e9;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Landing Screen */
+        #landing {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .factory-choice {
+            display: flex;
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .choice-card {
+            background: var(--card);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 250px;
+        }
+
+        .choice-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 40px rgba(79, 70, 229, 0.2);
+        }
+
+        .choice-card h2 {
+            margin: 10px 0;
+            color: var(--accent);
+        }
+
+        /* Dashboard (Hidden initially) */
+        #dashboard {
+            display: none;
+            width: 950px;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            margin: 0;
+            background: linear-gradient(90deg, #4f46e5, #0ea5e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #334155;
+            height: fit-content;
+        }
+
+        h3 {
+            margin-top: 0;
+            color: var(--accent);
+            border-bottom: 1px solid #334155;
+            padding-bottom: 10px;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: #0f172a;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: 0.2s;
+            align-items: center;
+        }
+
+        .item-row:hover {
+            border-color: var(--primary);
+            transform: translateX(5px);
+            background: #334155;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+            font-size: 0.8rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-icon {
+            background: transparent;
+            color: #94a3b8;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        .btn-icon:hover {
+            color: var(--accent);
+        }
+
+        .log-box {
+            background: #000;
+            border-radius: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            padding: 15px;
+            height: 350px;
+            overflow-y: auto;
+            color: #10b981;
+        }
+
+        .log-item {
+            margin-bottom: 8px;
+            border-left: 2px solid #555;
+            padding-left: 10px;
+        }
+
+        .selector {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .sel-btn {
+            flex: 1;
+            padding: 10px;
+            background: #334155;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .sel-btn.active {
+            border-color: var(--accent);
+            background: #4f46e5;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        .admin-controls {
+            display: none;
+            margin-top: 20px;
+            border-top: 1px dashed #444;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- FACTORY LANDING SCREEN -->
+    <div id="landing">
+        <h1 style="font-size: 3rem; margin:0">KIOSK OS</h1>
+        <p style="color: #64748b; font-size: 1.2rem">Choose your Factory Production Mode</p>
+        <div class="factory-choice">
+            <div class="choice-card" onclick="initKiosk('pharmacy')">
+                <span style="font-size: 4rem">🏥</span>
+                <h2>PHARMACY</h2>
+                <p style="font-size: 0.8rem; color: #94a3b8">Robotic Hardware Strategy</p>
+            </div>
+            <div class="choice-card" onclick="initKiosk('food')">
+                <span style="font-size: 4rem">🍔</span>
+                <h2>FOOD </h2>
+                <p style="font-size: 0.8rem; color: #94a3b8">Spiral Hardware Strategy</p>
+            </div>
+        </div>
+        <p style="position:fixed; bottom: 20px; color: #444">Factory Pattern Implementation</p>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <header id="header"
+        style="display:none; width: 950px; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div style="text-align: left;">
+            <h1 style="margin:0">UNIFIED KIOSK OS</h1>
+            <p style="color: #64748b; margin:0" id="kiosk-status">Mode: Loading...</p>
+        </div>
+        <button class="btn btn-danger" onclick="goHome()" style="background: #334155; border: 1px solid #444;">🏠 SWITCH
+            KIOSK</button>
+    </header>
+
+    <div class="container" id="dashboard">
+        <!-- USER INTERFACE -->
+        <div class="card">
+            <h3>🛍️ <span id="kiosk-label">INVENTORY</span> </h3>
+            <div id="items-container" class="item-list">
+                <!-- Items loaded via JS -->
+            </div>
+
+            <div id="add-item-section" class="admin-controls">
+                <h3>➕ ADD NEW PRODUCT</h3>
+                <div style="background: #0f172a; padding: 15px; border-radius: 10px; border: 1px solid #334155;">
+                    <input type="text" id="new-name" placeholder="Item Name">
+                    <div style="display:flex; gap:10px">
+                        <input type="number" id="new-price" placeholder="Price ($)">
+                        <input type="number" id="new-stock" placeholder="Qty">
+                    </div>
+                    <button class="btn btn-primary" style="width:100%" onclick="addItem()">Add to System</button>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 20px;">🛡️ PAYMENT STRATEGY</h3>
+            <div class="selector">
+                <button class="sel-btn active" onclick="setPayment('card', this)">CARD (Default)</button>
+                <button class="sel-btn" onclick="setPayment('upi', this)">UPI / QR</button>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: LOGS & ADMIN -->
+        <div>
+            <div class="card" style="margin-bottom: 20px;">
+                <h3>🛡️ ADMIN ACCESS (PROXY)</h3>
+                <div id="admin-login-ui">
+                    <input type="password" id="admin-pwd" placeholder="Admin PIN (admin123)">
+                    <button class="btn btn-primary" style="width: 100%" onclick="login()">Login to Proxy</button>
+                </div>
+                <div id="admin-hw-ui" class="admin-controls" style="margin-top:0; border-top:0; padding-top:0">
+                    <p style="font-size: 0.8rem; margin: 10px 0;">Force Change Strategy:</p>
+                    <div class="selector">
+                        <button class="sel-btn" id="hw-robotic" onclick="setHardware('robotic')">ROBOTIC</button>
+                        <button class="sel-btn" id="hw-spiral" onclick="setHardware('spiral')">SPIRAL</button>
+                    </div>
+                    <button class="btn btn-danger" style="width: 100%; margin-top: 15px;" onclick="logout()">🔓 LOGOUT
+                        ADMIN</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📜 DISPENSE LOGS</h3>
+                <div id="logs" class="log-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isAdmin = false;
+        let sysType = "";
+
+        async function api(path, data) {
+            const r = await fetch(path, { method: 'POST', body: JSON.stringify(data) });
+            return r.json();
+        }
+
+        function log(msg) {
+            const box = document.getElementById('logs');
+            const d = document.createElement('div');
+            d.className = 'log-item';
+            d.innerHTML = `<span style="color:#64748b; font-size:0.7rem">${new Date().toLocaleTimeString()}</span><br>${msg}`;
+            box.prepend(d);
+        }
+
+        async function initKiosk(type) {
+            const res = await api('/init_kiosk', { type });
+            if (res.status === 'ok') {
+                sysType = type;
+                document.getElementById('landing').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'grid';
+                document.getElementById('header').style.display = 'block';
+                document.getElementById('kiosk-status').innerText = `Factory Mode: ${type.toUpperCase()}`;
+                document.getElementById('kiosk-label').innerText = `${type.toUpperCase()} PRODUCTS`;
+                log(`SYSTEM: Kiosk initialized via Factory as ${type.toUpperCase()}.`);
+                loadItems();
+            }
+        }
+
+        async function loadItems() {
+            const r = await fetch('/get_items');
+            const items = await r.json();
+            const container = document.getElementById('items-container');
+            container.innerHTML = '';
+
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item-row';
+                div.innerHTML = `
+                    <div style="flex-grow:1">
+                        <span style="font-weight:600">${item.name}</span>
+                        <span style="font-size:0.8rem; color:var(--accent); margin-left:10px">$${item.price}</span>
+                        <div style="font-size:0.75rem; color:#94a3b8">Stock: ${item.stock}</div>
+                    </div>
+                    ${isAdmin ? `
+                        <button class="btn-icon" onclick="promptUpdate(${item.id}, ${item.stock})">✏️</button>
+                        <button class="btn-icon" onclick="deleteItem(${item.id})">🗑️</button>
+                    ` : `
+                        <button class="btn btn-primary" onclick="buy(${item.id}, '${item.name}', ${item.price})" ${item.stock <= 0 ? 'disabled style="opacity:0.5"' : ''}>
+                            ${item.stock > 0 ? 'BUY' : 'SOLD OUT'}
+                        </button>
+                    `}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function buy(id, name, price) {
+            const res = await api('/buy', { id, name, price });
+            if (res.status === 'ok') {
+                log(`🛒 Purchased ${name}!`);
+                log(res.logs.payment);
+                log(res.logs.dispense);
+                loadItems();
+            } else {
+                alert(res.msg);
+            }
+        }
+
+        async function login() {
+            const pwd = document.getElementById('admin-pwd').value;
+            const res = await api('/login', { password: pwd });
+            if (res.status === 'ok') {
+                isAdmin = true;
+                document.getElementById('admin-login-ui').style.display = 'none';
+                document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'block');
+                log("AUTH: Admin Proxy Access Granted.");
+                loadItems();
+            } else { alert("Access Denied!"); }
+        }
+
+        async function setPayment(method, el) {
+            document.querySelectorAll('.sel-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            const res = await api('/set_payment', { method });
+            log(res.msg);
+        }
+
+        async function setHardware(method) {
+            const res = await api('/update_hardware', { method });
+            log(res.msg);
+        }
+
+        async function addItem() {
+            const name = document.getElementById('new-name').value;
+            const price = document.getElementById('new-price').value;
+            const stock = document.getElementById('new-stock').value;
+            if (!name || !price || !stock) return;
+            const res = await api('/add_item', { name, price, stock });
+            log(res.msg);
+            loadItems();
+        }
+
+        async function deleteItem(id) {
+            if (confirm("Delete item?")) {
+                const res = await api('/delete_item', { id });
+                log(res.msg);
+                loadItems();
+            }
+        }
+
+        async function promptUpdate(id, current) {
+            const qty = prompt("New Stock:", current);
+            if (qty !== null) {
+                const res = await api('/update_stock', { id, stock: qty });
+                log(res.msg);
+                loadItems();
+            }
+        }
+
+        function goHome() {
+            if (confirm("Exit this kiosk and return to main menu?")) {
+                location.reload(); // Simplest way to reset all states
+            }
+        }
+
+        async function logout() {
+            if (confirm("Logout from admin panel?")) {
+                const res = await api('/logout', {});
+                isAdmin = false;
+                document.getElementById('admin-login-ui').style.display = 'block';
+                document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'none');
+                log("AUTH: Admin Logged Out.");
+                loadItems();
+            }
+        }
+    </script>
+</body>
+
+</html>
