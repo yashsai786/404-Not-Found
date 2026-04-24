@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Aura Retail OS — {{ kiosk_type }} runtime</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+
+<body class="runtime collapsed" data-kiosk="{{ kiosk_type }}">
+  <div class="grid-bg"></div>
+
+  <!-- LEFT RAIL: pattern stack -->
+  <aside class="rail">
+    <div class="rail-title">PATTERNS<br><span class="muted">live stack</span></div>
+    <ul class="rail-list" id="patternList">
+      <li data-p="singleton"><span>01</span>Singleton<!-- <small>CentralRegistry</small> --></li>
+      <li data-p="factory"><span>02</span>Abstract Factory<!-- <small>{{ kiosk_type }}Factory</small> --></li>
+      <li data-p="adapter"><span>03</span>Adapter<!-- <small>Card / UPI / Wallet</small> --></li>
+      <li data-p="proxy"><span>04</span>Proxy<!-- <small>InventorySecurityProxy</small> --></li>
+      <li data-p="composite"><span>05</span>Composite<!-- <small>Product · Bundle</small> --></li>
+      <li data-p="decorator"><span>06</span>Decorator<!-- <small>Refrigeration · Solar · Net</small> --></li>
+      <li data-p="strategy"><span>07</span>Strategy<!-- <small>Pricing · Dispenser</small> --></li>
+      <li data-p="command"><span>08</span>Command<!-- <small>Purchase · Refund · Restock</small> --></li>
+      <li data-p="facade"><span>09</span>Facade<!-- <small>KioskInterface</small> --></li>
+    </ul>
+    <!-- <div class="rail-foot">SQLite&nbsp;·&nbsp;Flask&nbsp;·&nbsp;404 Not Found!</div> -->
+  </aside>
+
+  <!-- TOP STATUS BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <a href="/" class="rail-home" title="Boot menu" style="margin-right:12px">◄ home</a>
+      <button class="rail-toggle" id="railToggle" title="Toggle Sidebar" style="margin-right:12px">≡</button>
+      <span class="kchip" id="kchip">{{ kiosk_type }}</span>
+      <span class="dim">runtime · </span><span id="dispenserName">—</span>
+      <span class="dim"> · policy </span><span id="policyName">—</span>
+    </div>
+    <div class="topbar-right">
+      <span id="emergencyBadge" class="ebadge hidden">⚠ EMERGENCY MODE</span>
+      <span id="adminBadge" class="abadge hidden">🔓 ADMIN</span>
+    </div>
+  </header>
+
+  <!-- MAIN GRID -->
+  <main class="rt-main">
+
+    <!-- COLUMN 1 -->
+    <section class="panel">
+      <header class="panel-head">
+        <h3>▣ Catalog</h3>
+        <span class="dim mono" id="catalogPolicy"></span>
+      </header>
+      <div id="productGrid" class="prod-grid"></div>
+
+      <h4 class="sub" id="bundleHeader" style="display:none">▣ Composite Bundles</h4>
+      <div id="bundleGrid" class="bundle-grid"></div>
+    </section>
+
+    <!-- COLUMN 2 -->
+    <section class="panel">
+      <header class="panel-head">
+        <h3>▣ Checkout</h3>
+      </header>
+      <div id="cartBox" class="cart-empty">No item selected. Click any product.</div>
+
+      <h4 class="sub">payment adapter</h4>
+      <div class="pay-row">
+        <button class="payopt active" data-pay="card">CARD</button>
+        <button class="payopt" data-pay="upi">UPI</button>
+        <button class="payopt" data-pay="wallet">WALLET</button>
+      </div>
+
+      <h4 class="sub">recent transactions <small class="dim">(Command log)</small></h4>
+      <div id="txnList" class="txn-list"></div>
+    </section>
+
+    <!-- COLUMN 3 -->
+    <section class="panel">
+      <header class="panel-head">
+        <h3>▣ Admin · Proxy gate</h3>
+      </header>
+
+      <div id="adminLogin">
+        <!-- <p class="dim small">Inventory mutations are intercepted by <b>InventorySecurityProxy</b>. Authenticate to unlock writes.</p> -->
+        <input type="password" id="pinInput" placeholder="PIN  (try: admin123)">
+        <button class="btn-primary" id="loginBtn">Authenticate</button>
+      </div>
+
+      <div id="adminPanel" class="hidden">
+        <button class="btn-ghost danger" id="logoutBtn">Logout admin</button>
+
+        <!-- <h4 class="sub">Strategy · dispenser swap</h4> -->
+        <div class="seg" id="dispenserSeg">
+          <button data-d="spiral">Spiral</button>
+          <button data-d="robotic">Robotic Arm</button>
+          <button data-d="conveyor">Conveyor</button>
+        </div>
+
+        <!-- <h4 class="sub">Decorator · attach modules</h4> -->
+        <div class="modseg">
+          <label><input type="checkbox" data-mod="refrigeration"> Refrigeration</label>
+          <label><input type="checkbox" data-mod="solar"> Solar</label>
+          <label><input type="checkbox" data-mod="network"> Network</label>
+        </div>
+
+        <!-- <h4 class="sub">Mode · CentralRegistry</h4> -->
+        <button class="btn-ghost" id="emergencyBtn">⚠ Toggle emergency mode</button>
+
+        <h4 class="sub">Inventory · add product</h4>
+        <div class="addbox">
+          <input id="newName" placeholder="Item name">
+          <div class="row2">
+            <input id="newPrice" placeholder="Standard Price (₹)" type="number" step="0.5">
+            <input id="newEPrice" placeholder="Emergency Price (₹)" type="number" step="0.5">
+          </div>
+          <div class="row2">
+            <input id="newStock" placeholder="Stock" type="number">
+            <label class="check"><input type="checkbox" id="newRefr"> refrigerated</label>
+          </div>
+          <button class="btn-primary" id="addBtn">+ Add product</button>
+        </div>
+
+        <h4 class="sub">Inventory · bundle creator</h4>
+        <div class="addbox">
+          <input id="newBName" placeholder="Bundle name">
+          <div class="row2">
+            <input id="newBPrice" placeholder="Bundle Price (₹)" type="number" step="0.5">
+            <input id="newBEPrice" placeholder="Bundle Emergency (₹)" type="number" step="0.5">
+          </div>
+          <p class="small dim">Tip: Add items to cart first, then click below to group them as a new bundle.</p>
+          <div class="row2" style="margin-top:10px">
+            <button class="btn-ghost" id="fetchCartBtn">⚡ Fetch from Cart</button>
+            <button class="btn-primary" id="addBundleBtn">+ Create Bundle</button>
+          </div>
+        </div>
+      </div>
+
+      <h4 class="sub">▣ Live event stream</h4>
+      <div id="eventLog" class="event-log"></div>
+    </section>
+
+  </main>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast"></div>
+
+  <script>window.KIOSK_TYPE = "{{ kiosk_type }}";</script>
+  <script src="/static/js/app.js?v=1.1"></script>
+</body>
+
+</html>

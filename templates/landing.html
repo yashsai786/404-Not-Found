@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kiosk OS — Factory Boot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="boot">
+  <div class="grid-bg"></div>
+
+  <main class="boot-container">
+    <header class="boot-hero">
+      <h1>KIOSK OS</h1>
+      <p class="subtitle">Choose your Factory Production Mode</p>
+    </header>
+
+    <div class="factory-grid">
+      <a href="/kiosk/PHARMACY" class="f-card pharm">
+        <div class="f-icon">🏥</div>
+        <h2>PHARMACY</h2>
+        <p>Robotic Hardware Strategy</p>
+      </a>
+
+      <a href="/kiosk/FOOD" class="f-card food">
+        <div class="f-icon">🍔</div>
+        <h2>FOOD</h2>
+        <p>Spiral Hardware Strategy</p>
+      </a>
+
+      <a href="/kiosk/EMERGENCY" class="f-card emerg">
+        <div class="f-icon">🚨</div>
+        <h2>EMERGENCY</h2>
+        <p>Solar Hardware Strategy</p>
+      </a>
+    </div>
+
+    <footer class="boot-foot">
+      <p>Factory Pattern Implementation</p>
+    </footer>
+  </main>
+</body>
+</html>
